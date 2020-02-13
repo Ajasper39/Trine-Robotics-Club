@@ -19,8 +19,8 @@
 //Receiver input values are accurate for > +- 5 units
 
 //Channel Pinout for Arduino
-#define CH1 2 //Y-Axis
-#define CH2 3 //X-Axis
+#define CH1 2 //X-Axis
+#define CH2 3 //Y-Axis
 
 //Motor Controller Pinout for Arduino
 #define M1A 7
