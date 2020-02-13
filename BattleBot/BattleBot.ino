@@ -1,5 +1,5 @@
 //Comment out DEBUG line before competition
-//#define DEBUG
+#define DEBUG
 
 //SOFTWARE DERIVED REQUIREMENTS
 ////// Radio Receiver //////
@@ -31,8 +31,8 @@
 //Ranges for radio input and deadzones
 #define deadPos 20
 #define deadNeg -20
-#define rangePos 250
-#define rangeNeg -250
+#define rangePos 175
+#define rangeNeg -175
 
 //Drive Forward
 void Forward()
@@ -215,31 +215,19 @@ void setup()
 }
 
 void loop()
-{
-  #ifdef DEBUG
-  for(int i = -500; i < 500; i+=25)
-  {
-    for(int j = -500; j < 500; j+=25)
-    {
-      translateReceiver(i, j);
-      Serial.print(i); Serial.print(", "); Serial.println(j);
-      delay(10);
-    }
-  }
-  #endif
-  
+{  
   //Read in channel values
-  int ch1 = pulseIn(CH1, HIGH, 30000);
-  int ch2 = pulseIn(CH2, HIGH, 30000);
+  int ch1 = map(pulseIn(CH1, HIGH, 30000), 1000, 2000, -500, 500);
+  int ch2 = map(pulseIn(CH2, HIGH, 30000), 1000, 2000, -500, 500);
 
   translateReceiver(ch1, ch2);
-
+ 
   #ifdef DEBUG
   //Print channel values for testing
   Serial.print("Channel 1: ");
-  Serial.println(map(ch1,1000,2000,-500,500));
+  Serial.println(ch1);
   Serial.print("Channel 2: ");
-  Serial.println(map(ch2,1000,2000,-500,500));
+  Serial.println(ch2);
   delay(100);
   #endif
 }
