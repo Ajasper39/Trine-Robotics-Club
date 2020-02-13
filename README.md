@@ -1,4 +1,4 @@
-# Trine-Robotics-Club
+# Trine Robotics Club
 
 ## Programming an Arduino Nano
 
