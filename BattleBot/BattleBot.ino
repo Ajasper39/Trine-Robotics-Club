@@ -1,5 +1,6 @@
 //Comment out DEBUG line before competition
 #define DEBUG
+#define DEBUG2
 
 //SOFTWARE DERIVED REQUIREMENTS
 ////// Radio Receiver //////
@@ -16,7 +17,7 @@
 //Arduino VIN to Cytron Motor Controller 5V0
 //Arduino GND to Cytron Motor Controller GND
 
-//Receiver input values are accurate for > +- 5 units
+//Receiver input values are accurate for > +- 7 units
 
 //Channel Pinout for Arduino
 #define CH1 2 //X-Axis
@@ -31,8 +32,9 @@
 //Ranges for radio input and deadzones
 #define deadPos 20
 #define deadNeg -20
-#define rangePos 175
-#define rangeNeg -175
+#define rangePos 290
+#define rangeNeg 290
+#define origin 0
 
 //Drive Forward
 void Forward()
@@ -108,85 +110,79 @@ void Stop()
 
 void translateReceiver(int ch1, int ch2)
 {
-  //Quadrant 1
-  if((ch1 > deadPos) && (ch2 > deadPos))
+  if((ch1 <= deadPos) && (ch1 >= deadNeg) && (ch2 >= deadNeg) && (ch2 <= deadPos))
   {
-    //Go Forward
-    if(ch2 < rangePos)
-    {
-      Forward();
-    }
-    //Spin Right
-    else if((ch1 > rangePos) && (ch2 < rangePos))
-    {
-      SpinRight();
-    }
-    //Turn Right Forward
-    else
-    {
-      TurnRightForward();
-    }
-  }
-  //Quadrant 2
-  else if((ch1 > deadPos) && (ch2 < deadNeg))
-  {
-    //Go Forward
-    if(ch2 > rangePos)
-    {
-      Forward();
-    }
-    //Spin Left
-    else if((ch1 < rangePos) && (ch2 < rangeNeg))
-    {
-      SpinLeft();
-    }
-    //Turn Left Forward
-    else
-    {
-      TurnLeftForward();
-    }
-  }
-  //Quadrant 3
-  else if((ch1 < deadNeg) && (ch2 < deadNeg))
-  {
-    //Go Backward
-    if(ch2 > rangeNeg)
-    {
-      Backward();
-    }
-    //Spin Left
-    else if((ch1 > rangeNeg) && (ch2 < rangeNeg))
-    {
-      SpinLeft();
-    }
-    //Turn Left Backward
-    else
-    {
-      TurnLeftBackward();
-    }
-  }
-  //Quadrant 4
-  else if((ch1 < deadNeg) && (ch2 < deadNeg))
-  {
-    //Go Backward
-    if(ch2 < rangePos)
-    {
-      Backward();
-    }
-    //Spin Right
-    else if((ch1 > rangeNeg) && (ch2 > rangePos))
-    {
-      SpinRight();
-    }
-    //Turn Left Backward
-    else
-    {
-      TurnRightBackward();
-    }
+    Stop();
+    #ifdef DEBUG
+    Serial.println("Stop");
+    #endif
   }
   else
   {
-    Stop();
+    //Forward
+    if((ch1 <= rangePos) && (ch1 >= rangeNeg) && (ch2 > origin))
+    {
+      Forward();
+      #ifdef DEBUG
+      Serial.println("Forward");
+      #endif
+    }
+    //Backward
+    else if((ch1 <= rangePos) && (ch1 >= rangeNeg) && (ch2 < origin))
+    {
+      Backward();
+      #ifdef DEBUG
+      Serial.println("Backward");
+      #endif
+    }
+    //Spin Left
+    else if((ch1 < rangeNeg) && (ch2 <= rangePos) && (ch2 >= rangeNeg))
+    {
+      SpinLeft();
+      #ifdef DEBUG
+      Serial.println("SpinLeft");
+      #endif
+    }
+    //Spin Right
+    else if((ch1 > rangePos) && (ch2 <= rangePos) && (ch2 >= rangeNeg))
+    {
+      SpinRight();
+      #ifdef DEBUG
+      Serial.println("SpinRight");
+      #endif
+    }
+    //Turn Right Forward
+    else if((ch1 > rangePos) && (ch2 > rangePos))
+    {
+      TurnRightForward();
+      #ifdef DEBUG
+      Serial.println("TurnRightForward");
+      #endif
+    }
+    //Turn Right Backward
+    else if((ch1 > rangePos) && (ch2 < rangeNeg))
+    {
+      TurnRightBackward();
+      #ifdef DEBUG
+      Serial.println("TurnRightBackward");
+      #endif
+    }
+    //Turn Left Forward
+    else if((ch1 < rangeNeg) && (ch2 > rangePos))
+    {
+      TurnLeftForward();
+      #ifdef DEBUG
+      Serial.println("TurnLeftForward");
+      #endif
+    }
+    //Turn Left Backward
+    else if((ch1 < rangeNeg) && (ch2 < rangeNeg))
+    {
+      TurnLeftBackward();
+      #ifdef DEBUG
+      Serial.println("TurnLeftBackward");
+      #endif
+    }
   }
 }
 
@@ -212,6 +208,16 @@ void setup()
   #ifdef DEBUG
   Serial.begin(9600);
   #endif
+
+  //Stay here while values receiver sets up
+  while((pulseIn(CH1, HIGH, 30000) >= 1500) && (pulseIn(CH1, HIGH, 30000) < -1500))
+  {
+    ;
+  }
+  while((pulseIn(CH2, HIGH, 30000) >= 1500) && (pulseIn(CH2, HIGH, 30000) < -1500))
+  {
+    ;
+  }
 }
 
 void loop()
@@ -222,7 +228,7 @@ void loop()
 
   translateReceiver(ch1, ch2);
  
-  #ifdef DEBUG
+  #ifdef DEBUG2
   //Print channel values for testing
   Serial.print("Channel 1: ");
   Serial.println(ch1);
