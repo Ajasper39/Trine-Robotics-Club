@@ -1,6 +1,6 @@
-//Comment out DEBUG line before competition
-#define DEBUG
-#define DEBUG2
+//Comment out DEBUG lines before competition
+//#define DEBUG
+//#define DEBUG2
 
 //SOFTWARE DERIVED REQUIREMENTS
 ////// Radio Receiver //////
@@ -24,6 +24,7 @@
 #define CH2 3 //Y-Axis
 
 //Motor Controller Pinout for Arduino
+//POSSIBLE NEED TO FLIP M2A and M2B Arduino Pins
 #define M1A 7
 #define M1B 8
 #define M2A 9
@@ -31,10 +32,11 @@
 
 //Ranges for radio input and deadzones
 #define deadPos 20
-#define deadNeg -20
+#define deadNeg (-20)
 #define rangePos 290
-#define rangeNeg 290
+#define rangeNeg (-290)
 #define origin 0
+#define noInput (-1500)
 
 //Drive Forward
 void Forward()
@@ -110,7 +112,7 @@ void Stop()
 
 void translateReceiver(int ch1, int ch2)
 {
-  if((ch1 <= deadPos) && (ch1 >= deadNeg) && (ch2 >= deadNeg) && (ch2 <= deadPos))
+  if(((ch1 <= deadPos) && (ch1 >= deadNeg)) && ((ch2 >= deadNeg) && (ch2 <= deadPos)))
   {
     Stop();
     #ifdef DEBUG
@@ -120,7 +122,7 @@ void translateReceiver(int ch1, int ch2)
   else
   {
     //Forward
-    if((ch1 <= rangePos) && (ch1 >= rangeNeg) && (ch2 > origin))
+    if(((ch1 <= rangePos) && (ch1 >= rangeNeg)) && (ch2 > origin))
     {
       Forward();
       #ifdef DEBUG
@@ -128,7 +130,7 @@ void translateReceiver(int ch1, int ch2)
       #endif
     }
     //Backward
-    else if((ch1 <= rangePos) && (ch1 >= rangeNeg) && (ch2 < origin))
+    else if(((ch1 <= rangePos) && (ch1 >= rangeNeg)) && (ch2 < origin))
     {
       Backward();
       #ifdef DEBUG
@@ -136,7 +138,7 @@ void translateReceiver(int ch1, int ch2)
       #endif
     }
     //Spin Left
-    else if((ch1 < rangeNeg) && (ch2 <= rangePos) && (ch2 >= rangeNeg))
+    else if((ch1 < rangeNeg) && ((ch2 <= rangePos) && (ch2 >= rangeNeg)))
     {
       SpinLeft();
       #ifdef DEBUG
@@ -144,7 +146,7 @@ void translateReceiver(int ch1, int ch2)
       #endif
     }
     //Spin Right
-    else if((ch1 > rangePos) && (ch2 <= rangePos) && (ch2 >= rangeNeg))
+    else if((ch1 > rangePos) && ((ch2 <= rangePos) && (ch2 >= rangeNeg)))
     {
       SpinRight();
       #ifdef DEBUG
@@ -199,22 +201,19 @@ void setup()
   pinMode(M2A, OUTPUT);
   pinMode(M2B, OUTPUT);
 
-  //initialize as LOW (brake)
+  //initialize as LOW (stop)
   digitalWrite(M1A, LOW);
   digitalWrite(M1B, LOW);
   digitalWrite(M2A, LOW);
   digitalWrite(M2B, LOW);
 
   #ifdef DEBUG
+  //Enable console window for debugging
   Serial.begin(9600);
   #endif
 
-  //Stay here while values receiver sets up
-  while((pulseIn(CH1, HIGH, 30000) >= 1500) && (pulseIn(CH1, HIGH, 30000) < -1500))
-  {
-    ;
-  }
-  while((pulseIn(CH2, HIGH, 30000) >= 1500) && (pulseIn(CH2, HIGH, 30000) < -1500))
+  //Stay here while receiver starts up
+  while((pulseIn(CH1, HIGH, 30000) > noInput) || (pulseIn(CH2, HIGH, 30000) > noInput))
   {
     ;
   }
@@ -222,12 +221,16 @@ void setup()
 
 void loop()
 {  
-  //Read in channel values
+  //Read receiver channel values and map into coordinate plane
   int ch1 = map(pulseIn(CH1, HIGH, 30000), 1000, 2000, -500, 500);
   int ch2 = map(pulseIn(CH2, HIGH, 30000), 1000, 2000, -500, 500);
 
-  translateReceiver(ch1, ch2);
- 
+  //only translate if receiver is connected
+  if((ch1 > noInput) && (ch2 > noInput))
+  {
+    translateReceiver(ch1, ch2);
+  }
+   
   #ifdef DEBUG2
   //Print channel values for testing
   Serial.print("Channel 1: ");
