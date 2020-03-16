@@ -1,6 +1,6 @@
 //Comment out DEBUG lines before competition
-//#define DEBUG
-//#define DEBUG2
+#define DEBUG
+#define DEBUG2
 
 //SOFTWARE DERIVED REQUIREMENTS
 ////// Radio Receiver //////
@@ -9,12 +9,11 @@
 //Arduino GND to ESC GND (Brown)
 //Arduino D2 to Receiver AILE Data 
 //Arduino D3 to Receiver ELEV Data
-////// Cytron Motor Controller MDD3A //////
-//Arduino D7 to Cytron Motor Controller M1A
-//Arduino D8 to Cytron Motor Controller M1B
-//Arduino D9 to Cytron Motor Controller M2A
-//Arduino D10 to Cytron Motor Controller M2B
-//Arduino VIN to Cytron Motor Controller 5V0
+////// Cytron Motor Controller MDD10A //////
+//Arduino D7 to Cytron Motor Controller DIR1
+//Arduino A3 to Cytron Motor Controller PWM1
+//Arduino D8 to Cytron Motor Controller DIR2
+//Arduino A4 to Cytron Motor Controller PWM2
 //Arduino GND to Cytron Motor Controller GND
 
 //Receiver input values are accurate for > +- 7 units
@@ -22,13 +21,13 @@
 //Channel Pinout for Arduino
 #define CH1 2 //X-Axis
 #define CH2 3 //Y-Axis
+#define SP 0  //Speed Toggle Pin
 
 //Motor Controller Pinout for Arduino
-//POSSIBLE NEED TO FLIP M2A and M2B Arduino Pins
-#define M1A 7
-#define M1B 8
-#define M2A 9
-#define M2B 10
+#define DIR1 7
+#define PWM1 A3
+#define DIR2 8
+#define PWM2 A4
 
 //Ranges for radio input and deadzones
 #define deadPos 20
@@ -38,78 +37,95 @@
 #define origin 0
 #define noInput (-1500)
 
+bool speed;
+
+int speedVal;
+
 //Drive Forward
 void Forward()
 {
-  digitalWrite(M1A, HIGH);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, HIGH);
-  digitalWrite(M2B, LOW);
+
+  digitalWrite(DIR1, HIGH);
+  analogWrite(PWM1, speedVal);
+  digitalWrite(DIR2, HIGH);  
+  analogWrite(PWM2, speedVal);
 }
 //Drive Backward
 void Backward()
 {
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, HIGH);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, HIGH);
+  digitalWrite(DIR1, LOW);
+  analogWrite(PWM1, speedVal);
+  digitalWrite(DIR2, LOW);  
+  analogWrite(PWM2, speedVal);
 }
 //Spin Right
 void SpinRight()
 {
-  digitalWrite(M1A, HIGH);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, HIGH);
+  digitalWrite(DIR1, HIGH);
+  analogWrite(PWM1, speedVal);
+  digitalWrite(DIR2, LOW);  
+  analogWrite(PWM2, speedVal);
 }
 //Spin Left
 void SpinLeft()
 {
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, HIGH);
-  digitalWrite(M2A, HIGH);
-  digitalWrite(M2B, LOW);
+  digitalWrite(DIR1, LOW);
+  analogWrite(PWM1, speedVal);
+  digitalWrite(DIR2, HIGH);  
+  analogWrite(PWM2, speedVal);
 }
 //Turn Right Forward
 void TurnRightForward()
 {
-  digitalWrite(M1A, HIGH);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, LOW);
+  digitalWrite(DIR1, HIGH);
+  analogWrite(PWM1, speedVal);
+  digitalWrite(DIR2, LOW);  
+  analogWrite(PWM2, 0);
 }
 //Turn Right Backward
 void TurnRightBackward()
 {
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, HIGH);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, LOW);
+  digitalWrite(DIR1, LOW);
+  analogWrite(PWM1, speedVal);
+  digitalWrite(DIR2, LOW);  
+  analogWrite(PWM2, 0);
 }
 //Turn Left Forward
 void TurnLeftForward()
 {
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, HIGH);
-  digitalWrite(M2B, LOW);
+  digitalWrite(DIR1, LOW);
+  analogWrite(PWM1, 0);
+  digitalWrite(DIR2, HIGH);  
+  analogWrite(PWM2, speedVal);
 }
 void TurnLeftBackward()
 {
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, HIGH);
+  digitalWrite(DIR1, LOW);
+  analogWrite(PWM1, 0);
+  digitalWrite(DIR2, LOW);  
+  analogWrite(PWM2, speedVal);
 }
 //Stop
 void Stop()
 {
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, LOW);
+  digitalWrite(DIR1, HIGH);
+  analogWrite(PWM1, 0);
+  digitalWrite(DIR2, HIGH);  
+  analogWrite(PWM2, 0);
 }
 
+//Set Speed
+void setSpeed(int chs)
+{
+  if(speed)
+  {
+    speedVal = 255;
+  }
+  else
+  {
+    speedVal = 128;
+  }
+}
 void translateReceiver(int ch1, int ch2)
 {
   if(((ch1 <= deadPos) && (ch1 >= deadNeg)) && ((ch2 >= deadNeg) && (ch2 <= deadPos)))
@@ -190,22 +206,26 @@ void translateReceiver(int ch1, int ch2)
 
 void setup() 
 {
+  //Initialize speed as half speed
+  speed = false;
+  speedVal = 128;
+  
   //Make each channel an input to read value from receiver
   pinMode(CH1, INPUT);
   pinMode(CH2, INPUT);
 
   //Make each pin an output for the motor controller
   //Set as output
-  pinMode(M1A, OUTPUT);
-  pinMode(M1B, OUTPUT);
-  pinMode(M2A, OUTPUT);
-  pinMode(M2B, OUTPUT);
+  pinMode(DIR1, OUTPUT);
+  pinMode(PWM1, OUTPUT);
+  pinMode(DIR2, OUTPUT);
+  pinMode(PWM2, OUTPUT);
 
-  //initialize as LOW (stop)
-  digitalWrite(M1A, LOW);
-  digitalWrite(M1B, LOW);
-  digitalWrite(M2A, LOW);
-  digitalWrite(M2B, LOW);
+  //Initialize as Stopped
+  digitalWrite(DIR1, LOW);
+  analogWrite(PWM1, 0);
+  digitalWrite(DIR2, LOW);  
+  analogWrite(PWM2, 0);
 
   #ifdef DEBUG
   //Enable console window for debugging
