@@ -3,32 +3,39 @@
 //#define DEBUG2
 
 //SOFTWARE DERIVED REQUIREMENTS
+////// LED //////
+//Arduino D8 to Anode of LED
+//Arduino GND to Cathode of LED
 ////// Radio Receiver //////
 //Arduino 5V to Receiver THRO +
 //Arduino GND to Receiver THRO -
 //Arduino GND to ESC GND (Brown)
 //Arduino D2 to Receiver AILE Data 
 //Arduino D3 to Receiver ELEV Data
+//Arduino D4 to Receiver GEAR Data
 ////// Cytron Motor Controller MDD10A //////
 //Arduino D5 to Cytron Motor Controller DIR1
-//Arduino A0 to Cytron Motor Controller PWM1
+//Arduino D10 to Cytron Motor Controller PWM1
 //Arduino D6 to Cytron Motor Controller DIR2
-//Arduino A1 to Cytron Motor Controller PWM2
+//Arduino D11 to Cytron Motor Controller PWM2
 //Arduino GND to Cytron Motor Controller GND
 
 //Receiver input values are accurate for > +- 7 units
 
+//LED
+#define LED 8
+
 //Channel Pinout for Arduino
 #define CH1 2 //X-Axis
 #define CH2 3 //Y-Axis
-//#define SP 0  //Speed Toggle Pin
+#define SPD 4  //Speed Toggle Pin
 
 //Motor Controller Pinout for Arduino
 //***** try D10 & D11 for PWM outputs *****//
 #define DIR1 5
-#define PWM1 A0
+#define PWM1 10
 #define DIR2 6
-#define PWM2 A1
+#define PWM2 11
 
 //Ranges for radio input and deadzones
 #define deadPos 50
@@ -37,8 +44,6 @@
 #define rangeNeg (-290)
 #define origin 0
 #define noInput (-1500)
-
-bool speed;
 
 int speedVal;
 
@@ -118,7 +123,7 @@ void Stop()
 //Set Speed
 void setSpeed(int chs)
 {
-  if(speed)
+  if(chs > 0)
   {
     speedVal = 255;
   }
@@ -207,13 +212,13 @@ void translateReceiver(int ch1, int ch2)
 
 void setup() 
 {
-  //Initialize speed as half speed
-  speed = false;
-  speedVal = 128;
+  //LED 
+  pinMode(LED, INPUT_PULLUP);
   
   //Make each channel an input to read value from receiver
   pinMode(CH1, INPUT);
   pinMode(CH2, INPUT);
+  pinMode(SP, INPUT);
 
   //Make each pin an output for the motor controller
   //Set as output
@@ -221,12 +226,15 @@ void setup()
   pinMode(PWM1, OUTPUT);
   pinMode(DIR2, OUTPUT);
   pinMode(PWM2, OUTPUT);
-
+  
   //Initialize as Stopped
   digitalWrite(DIR1, LOW);
   analogWrite(PWM1, 0);
   digitalWrite(DIR2, LOW);  
   analogWrite(PWM2, 0);
+
+  //Initialize speed as half speed
+  speedVal = 128;
 
   #ifdef DEBUG
   //Enable console window for debugging
@@ -245,7 +253,11 @@ void loop()
   //Read receiver channel values and map into coordinate plane
   int ch1 = map(pulseIn(CH1, HIGH, 30000), 1000, 2000, -500, 500);
   int ch2 = map(pulseIn(CH2, HIGH, 30000), 1000, 2000, -500, 500);
+  int chs = map(pulseIn(SPD, HIGH, 30000), 1000, 2000, -500, 500);
 
+  //Set speed of drive wheels
+  setSpeed(chs);
+  
   //only translate if receiver is connected
   if((ch1 > noInput) && (ch2 > noInput))
   {
@@ -258,6 +270,8 @@ void loop()
   Serial.println(ch1);
   Serial.print("Channel 2: ");
   Serial.println(ch2);
-  delay(100);
+  Serial.print("SP: ");
+  Serial.println(chs);
+  delay(200);
   #endif
 }
