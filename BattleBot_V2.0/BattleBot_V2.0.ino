@@ -1,6 +1,6 @@
 //Comment out DEBUG lines before competition
-#define DEBUG
-#define DEBUG2
+//#define DEBUG
+//#define DEBUG2
 
 //SOFTWARE DERIVED REQUIREMENTS
 ////// Radio Receiver //////
@@ -10,10 +10,10 @@
 //Arduino D2 to Receiver AILE Data 
 //Arduino D3 to Receiver ELEV Data
 ////// Cytron Motor Controller MDD10A //////
-//Arduino D7 to Cytron Motor Controller DIR1
-//Arduino A3 to Cytron Motor Controller PWM1
-//Arduino D8 to Cytron Motor Controller DIR2
-//Arduino A4 to Cytron Motor Controller PWM2
+//Arduino D5 to Cytron Motor Controller DIR1
+//Arduino A0 to Cytron Motor Controller PWM1
+//Arduino D6 to Cytron Motor Controller DIR2
+//Arduino A1 to Cytron Motor Controller PWM2
 //Arduino GND to Cytron Motor Controller GND
 
 //Receiver input values are accurate for > +- 7 units
@@ -21,17 +21,18 @@
 //Channel Pinout for Arduino
 #define CH1 2 //X-Axis
 #define CH2 3 //Y-Axis
-#define SP 0  //Speed Toggle Pin
+//#define SP 0  //Speed Toggle Pin
 
 //Motor Controller Pinout for Arduino
-#define DIR1 7
-#define PWM1 A3
-#define DIR2 8
-#define PWM2 A4
+//***** try D10 & D11 for PWM outputs *****//
+#define DIR1 5
+#define PWM1 A0
+#define DIR2 6
+#define PWM2 A1
 
 //Ranges for radio input and deadzones
-#define deadPos 20
-#define deadNeg (-20)
+#define deadPos 50
+#define deadNeg (-50)
 #define rangePos 290
 #define rangeNeg (-290)
 #define origin 0
@@ -79,7 +80,7 @@ void TurnRightForward()
 {
   digitalWrite(DIR1, HIGH);
   analogWrite(PWM1, speedVal);
-  digitalWrite(DIR2, LOW);  
+  //digitalWrite(DIR2, LOW);  
   analogWrite(PWM2, 0);
 }
 //Turn Right Backward
@@ -87,20 +88,20 @@ void TurnRightBackward()
 {
   digitalWrite(DIR1, LOW);
   analogWrite(PWM1, speedVal);
-  digitalWrite(DIR2, LOW);  
+  //digitalWrite(DIR2, LOW);  
   analogWrite(PWM2, 0);
 }
 //Turn Left Forward
 void TurnLeftForward()
 {
-  digitalWrite(DIR1, LOW);
+  //digitalWrite(DIR1, LOW);
   analogWrite(PWM1, 0);
   digitalWrite(DIR2, HIGH);  
   analogWrite(PWM2, speedVal);
 }
 void TurnLeftBackward()
 {
-  digitalWrite(DIR1, LOW);
+  //digitalWrite(DIR1, LOW);
   analogWrite(PWM1, 0);
   digitalWrite(DIR2, LOW);  
   analogWrite(PWM2, speedVal);
@@ -108,9 +109,9 @@ void TurnLeftBackward()
 //Stop
 void Stop()
 {
-  digitalWrite(DIR1, HIGH);
+  //digitalWrite(DIR1, HIGH);
   analogWrite(PWM1, 0);
-  digitalWrite(DIR2, HIGH);  
+  //digitalWrite(DIR2, HIGH);  
   analogWrite(PWM2, 0);
 }
 
